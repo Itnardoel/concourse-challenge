@@ -15,4 +15,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --lightest: rgb(238,238,238);
+  --lighter: rgb(204,226,149);
+  --base: rgb(141,198,120);
+  --darker: rgb(75,151,71);
+  --darkest: rgb(75,151,71);
 }
