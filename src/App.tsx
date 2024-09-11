@@ -20,7 +20,15 @@ function App() {
         "https://api.github.com/repos/facebook/react/stats/commit_activity",
       );
 
-      return (await response.json()) as CommitActivity[];
+      const data = (await response.json()) as CommitActivity[];
+
+      return data.map((week) => {
+        return {
+          days: week.days.map((day) => day),
+          total: week.total,
+          week: week.week * 1000 + new Date(week.week * 1000).getTimezoneOffset() * 60000, //Unix timestamp in seconds to miliseconds in GMT +0000
+        } as CommitActivity;
+      });
     },
   });
 
@@ -35,54 +43,61 @@ function App() {
   return (
     <>
       <section
-        className="m-4 grid grid-flow-col gap-1"
+        className="m-4 grid scale-90 grid-flow-col gap-1 overflow-auto"
         style={{
           gridTemplateColumns: `repeat(${weeks.length + 1}, auto)`,
           gridTemplateRows: `repeat(${weeks[0].days.length + 1}, auto)`,
         }}
       >
         <span />
+        {/* weekday column */}
         {weeks[0].days.map((_, index) => (
-          <span key={index} className="text-sm even:invisible">
-            {new Date(weeks[0].week * 1000 + 86400000 * (index + 1)).toLocaleString("en-US", {
+          <span
+            key={new Date(weeks[0].week + index * 86400000).toLocaleString("en-US", {
+              weekday: "short",
+            })}
+            className="text-sm even:invisible"
+          >
+            {new Date(weeks[0].week + index * 86400000).toLocaleString("en-US", {
               weekday: "short",
             })}
           </span>
         ))}
         {weeks.map((week, index) => [
+          // Month of the week
           <span
             key={week.week}
             className={`text-sm ${
-              new Date(weeks[index].week * 1000).getMonth() ===
-              new Date(weeks[index - 1]?.week * 1000).getMonth()
+              new Date(weeks[index].week).getMonth() === new Date(weeks[index - 1]?.week).getMonth()
                 ? "invisible"
                 : ""
             } `}
           >
-            {new Date(week.week * 1000).toLocaleString("en-US", {month: "short"})}
+            {new Date(week.week).toLocaleString("en-US", {month: "short"})}
           </span>,
           week.days.map((day, index) => (
+            // Days of the week
             <span
-              key={week.week * 1000 + 86400000 * (index + 1)}
+              key={week.week + 86400000 * index}
               className="size-7 rounded"
               style={{
                 backgroundColor:
                   day === 0
                     ? "var(--lightest)"
-                    : day < Math.floor(week.total / 4)
+                    : day < week.total / 4
                       ? "var(--lighter)"
-                      : day < Math.floor((week.total * 2) / 4)
+                      : day < (week.total * 2) / 4
                         ? "var(--base)"
-                        : day < Math.floor((week.total * 3) / 4)
+                        : day < (week.total * 3) / 4
                           ? "var(--darker)"
                           : "var(--darkest)",
               }}
-              title={`${day} contributions on ${new Date(week.week * 1000 + 86400000 * (index + 1)).toLocaleDateString("en-US", {month: "short", day: "numeric"})}`}
+              title={`${day} contributions on ${new Date(week.week + 86400000 * index).toLocaleDateString("en-US", {month: "short", day: "numeric"})}`}
             />
           )),
         ])}
       </section>
-      <section className="m-4 flex items-center justify-end gap-2 pt-2">
+      <section className="m-4 flex scale-90 items-center justify-end gap-2 pt-2">
         <span className="text-2xl">Less</span>
         <div className="size-7 rounded" style={{backgroundColor: "var(--lightest)"}} />
         <div className="size-7 rounded" style={{backgroundColor: "var(--lighter)"}} />
