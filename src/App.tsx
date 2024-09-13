@@ -1,4 +1,5 @@
 import {useQuery} from "@tanstack/react-query";
+import {useState} from "react";
 // import "./App.css";
 
 type CommitActivity = {
@@ -7,17 +8,46 @@ type CommitActivity = {
   week: number;
 };
 
+type OwnerRepo = {
+  owner: string;
+  repo: string;
+};
+
 function App() {
+  const [formValues, setFormValues] = useState({
+    owner: "facebook",
+    repo: "react",
+  });
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(event.target as HTMLFormElement)) as OwnerRepo;
+
+    event.currentTarget.reset();
+
+    setFormValues(() => ({
+      owner: data.owner.trim().toLowerCase(),
+      repo: data.repo.trim().toLowerCase(),
+    }));
+  }
+
   const {
     data: weeks,
     isPending,
     isError,
     error,
   } = useQuery({
-    queryKey: ["data"],
+    queryKey: ["data", formValues],
     queryFn: async () => {
       const response = await fetch(
-        "https://api.github.com/repos/facebook/react/stats/commit_activity",
+        `https://api.github.com/repos/${formValues.owner}/${formValues.repo}/stats/commit_activity`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/vnd.github+json",
+            "User-Agent": "concourse-challenge",
+          },
+        },
       );
 
       const data = (await response.json()) as CommitActivity[];
@@ -30,6 +60,9 @@ function App() {
         } as CommitActivity;
       });
     },
+    refetchOnWindowFocus: false,
+    retry: 5,
+    retryDelay: 10000,
   });
 
   if (isPending) {
@@ -41,9 +74,15 @@ function App() {
   }
 
   return (
-    <>
+    <main className="container m-auto grid min-h-screen place-content-center">
+      <header className="flex flex-col items-center">
+        <h1 className="mt-4 text-3xl font-bold">Commit Activity</h1>
+        <h2 className="mt-4 text-2xl font-semibold">
+          {formValues.owner} - {formValues.repo}
+        </h2>
+      </header>
       <section
-        className="m-4 grid scale-90 grid-flow-col gap-1 overflow-auto"
+        className="m-4 grid grid-flow-col gap-1 overflow-auto"
         style={{
           gridTemplateColumns: `repeat(${weeks.length + 1}, auto)`,
           gridTemplateRows: `repeat(${weeks[0].days.length + 1}, auto)`,
@@ -97,7 +136,7 @@ function App() {
           )),
         ])}
       </section>
-      <section className="m-4 flex scale-90 items-center justify-end gap-2 pt-2">
+      <section className="m-4 flex items-center justify-end gap-2 pt-2">
         <span className="text-2xl">Less</span>
         <div className="size-7 rounded" style={{backgroundColor: "var(--lightest)"}} />
         <div className="size-7 rounded" style={{backgroundColor: "var(--lighter)"}} />
@@ -106,7 +145,28 @@ function App() {
         <div className="size-7 rounded" style={{backgroundColor: "var(--darkest)"}} />
         <span className="text-2xl">More</span>
       </section>
-    </>
+      <form className="flex w-full flex-col items-center gap-2" onSubmit={handleSubmit}>
+        <input
+          required
+          className="flex-grow rounded px-2"
+          name="owner"
+          placeholder="facebook"
+          type="text"
+        />
+
+        <input
+          required
+          className="flex-grow rounded px-2"
+          name="repo"
+          placeholder="react"
+          type="text"
+        />
+
+        <button className="rounded border p-2 font-bold" type="submit">
+          Submit
+        </button>
+      </form>
+    </main>
   );
 }
 
