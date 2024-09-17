@@ -16,9 +16,33 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  scroll-behavior: smooth;
+
   --lightest: rgb(238,238,238);
   --lighter: rgb(204,226,149);
   --base: rgb(141,198,120);
   --darker: rgb(75,151,71);
   --darkest: rgb(48,95,46);
+}
+
+/* Modern browsers with `scrollbar-*` support */
+@supports (scrollbar-width: auto) {
+  section {
+      scrollbar-color: rgb(255 255 255 / 30%) transparent;
+      scrollbar-width: thin;
+  }
+}
+
+/* Legacy browsers with `::-webkit-scrollbar-*` support */
+@supports selector(::-webkit-scrollbar) {
+  section::-webkit-scrollbar-thumb {
+      background: rgb(255 255 255 / 10%);
+  }
+  section::-webkit-scrollbar-track {
+      background: transparent;
+  }
+  section::-webkit-scrollbar {
+      max-width: 6px;
+      max-height: 6px;
+  }
 }
