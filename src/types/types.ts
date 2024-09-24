@@ -8,3 +8,8 @@ export type OwnerRepo = {
   owner: string;
   repo: string;
 };
+
+export type ErrorResponse = {
+  documentation_url: string;
+  message: string;
+};

@@ -13,7 +13,13 @@ export default function CommitActivityGraph({formValues}: CommitActivityProps) {
   }
 
   if (isError && error) {
-    return <span className="text-center text-xl font-semibold text-red-500">{error.message}</span>;
+    return (
+      <span
+        className={`m-4 grid h-[261px] w-[1248px] place-content-center text-xl font-semibold ${error.message.includes("202") ? "text-green-500" : "text-red-500"} `}
+      >
+        {error.message}
+      </span>
+    );
   }
 
   if (isSuccess && weeks) {

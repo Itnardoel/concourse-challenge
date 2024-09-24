@@ -3,18 +3,21 @@ import {useState} from "react";
 import {type OwnerRepo} from "./types/types";
 import CommitActivityGraph from "./components/CommitActivity";
 import {useCommitActivity} from "./hooks/useCommitActivity";
-// import "./App.css";
 
 function App() {
   const [formValues, setFormValues] = useState({
     owner: "facebook",
     repo: "react",
   });
-  const {isPending} = useCommitActivity(formValues);
+  const {isPending, refetch} = useCommitActivity(formValues);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.target as HTMLFormElement)) as OwnerRepo;
+
+    if (JSON.stringify(formValues) === JSON.stringify(data)) {
+      refetch();
+    }
 
     event.currentTarget.reset();
 

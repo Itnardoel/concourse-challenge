@@ -1,6 +1,6 @@
 import {useQuery} from "@tanstack/react-query";
 
-import {type CommitActivity, OwnerRepo} from "../types/types";
+import {type CommitActivity, OwnerRepo, ErrorResponse} from "../types/types";
 
 export const useCommitActivity = (formValues: OwnerRepo) => {
   const {
@@ -9,9 +9,10 @@ export const useCommitActivity = (formValues: OwnerRepo) => {
     isSuccess,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["data", formValues],
-    queryFn: async () => {
+    queryFn: async ({signal}) => {
       const response = await fetch(
         `https://api.github.com/repos/${formValues.owner}/${formValues.repo}/stats/commit_activity`,
         {
@@ -20,14 +21,21 @@ export const useCommitActivity = (formValues: OwnerRepo) => {
             Accept: "application/vnd.github+json",
             "User-Agent": "concourse-challenge",
           },
+          signal,
         },
       );
 
       if (!response.ok) {
-        throw new Error(`${response.status} - Error on fetch`);
+        const error = (await response.json()) as ErrorResponse;
+
+        throw new Error(`${response.status} - ${error.message.split(". (")[0]}`);
       }
 
       const data = (await response.json()) as CommitActivity[];
+
+      if (Object.keys(data).length === 0) {
+        throw new Error(`${response.status} Accepted - Wait a few seconds and try again`);
+      }
 
       return data.map((week) => {
         return {
@@ -38,8 +46,7 @@ export const useCommitActivity = (formValues: OwnerRepo) => {
       });
     },
     refetchOnWindowFocus: false,
-    retry: 5,
-    retryDelay: 10000,
+    retry: false,
   });
 
   return {
@@ -48,5 +55,6 @@ export const useCommitActivity = (formValues: OwnerRepo) => {
     isSuccess,
     isError,
     error,
+    refetch,
   };
 };
